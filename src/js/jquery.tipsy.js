@@ -129,7 +129,7 @@
         toggleEnabled: function() { this.enabled = !this.enabled; }
     };
     
-    $.fn.tipsy = function(options) {
+    var tipsy = function(options) {
         
         if (options === true) {
             return this.data('tipsy');
@@ -174,17 +174,21 @@
         if (!options.live) this.each(function() { get(this); });
         
         if (options.trigger != 'manual') {
-            var binder   = options.live ? 'live' : 'bind',
-                eventIn  = options.trigger == 'hover' ? 'mouseenter' : 'focus',
+            var eventIn  = options.trigger == 'hover' ? 'mouseenter' : 'focus',
                 eventOut = options.trigger == 'hover' ? 'mouseleave' : 'blur';
-            this[binder](eventIn, enter)[binder](eventOut, leave);
+
+			if(options.live){
+				$(this.context).on(eventIn, this.selector, enter).on(eventOut, this.selector, leave)
+			} else {
+				this.on(eventIn, enter).on(eventOut, leave);
+			}
         }
         
         return this;
         
     };
     
-    $.fn.tipsy.defaults = {
+    tipsy.defaults = {
         className: null,
         delayIn: 0,
         delayOut: 0,
@@ -199,7 +203,7 @@
         trigger: 'hover'
     };
     
-    $.fn.tipsy.revalidate = function() {
+    tipsy.revalidate = function() {
       $('.tipsy').each(function() {
         var pointee = $.data(this, 'tipsy-pointee');
         if (!pointee || !isElementInDOM(pointee)) {
@@ -212,15 +216,15 @@
     // For example, you could store the gravity in a 'tipsy-gravity' attribute:
     // return $.extend({}, options, {gravity: $(ele).attr('tipsy-gravity') || 'n' });
     // (remember - do not modify 'options' in place!)
-    $.fn.tipsy.elementOptions = function(ele, options) {
+    tipsy.elementOptions = function(ele, options) {
         return $.metadata ? $.extend({}, options, $(ele).metadata()) : options;
     };
     
-    $.fn.tipsy.autoNS = function() {
+    tipsy.autoNS = function() {
         return $(this).offset().top > ($(document).scrollTop() + $(window).height() / 2) ? 's' : 'n';
     };
     
-    $.fn.tipsy.autoWE = function() {
+    tipsy.autoWE = function() {
         return $(this).offset().left > ($(document).scrollLeft() + $(window).width() / 2) ? 'e' : 'w';
     };
     
@@ -239,7 +243,7 @@
      *        that element's tooltip to be 'se', preserving the southern
      *        component.
      */
-     $.fn.tipsy.autoBounds = function(margin, prefer) {
+     tipsy.autoBounds = function(margin, prefer) {
 		return function() {
 			var dir = {ns: prefer[0], ew: (prefer.length > 1 ? prefer[1] : false)},
 			    boundTop = $(document).scrollTop() + margin,
@@ -254,5 +258,7 @@
 			return dir.ns + (dir.ew ? dir.ew : '');
 		}
 	};
+
+	jQuery.fn.extend({ tipsy: tipsy });
     
 })(jQuery);
